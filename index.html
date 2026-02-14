@@ -17,7 +17,6 @@ color:#6b3e3e;
 overflow-x:hidden;
 }
 
-/* HEART RAIN */
 .heartRain{
 position:fixed;
 top:-10px;
@@ -33,7 +32,7 @@ to{transform:translateY(110vh);opacity:0;}
 
 h1{
 font-family:"Great Vibes",cursive;
-font-size:36px;
+font-size:28px;
 color:#c2185b;
 margin:15px;
 }
@@ -78,6 +77,15 @@ border-radius:16px;
 }
 
 .step{display:none;padding:15px;}
+
+.savedCard{
+background:rgba(255,255,255,0.7);
+padding:10px;
+border-radius:12px;
+margin-top:10px;
+text-align:left;
+font-size:14px;
+}
 </style>
 </head>
 
@@ -91,7 +99,7 @@ border-radius:16px;
 <div id="lock" style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;">
 <h1>Brewed With Love ☕❤️</h1>
 <input type="password" id="pw" placeholder="Password">
-<button onclick="unlock()">Unlock</button>
+<button id="unlockBtn">Unlock</button>
 <p id="err"></p>
 </div>
 
@@ -99,9 +107,13 @@ border-radius:16px;
 
 <!-- GAME -->
 <div class="step" id="s1">
-<h1>Choose The Right Cup ☕</h1>
-<div class="card" id="gameArea"></div>
-<button id="gameNext" style="display:none;" onclick="nextStep()">Next 🤍</button>
+<h1>Catch My Heart 💕</h1>
+<div class="card">
+<p>Catch the heart 5 times to unlock the next page 😌</p>
+<div id="gameBox" style="position:relative;height:300px;border-radius:16px;background:rgba(255,255,255,0.4);overflow:hidden;margin-top:15px;"></div>
+<p id="gameMsg"></p>
+</div>
+<button id="gameNext" style="display:none;">Next 🤍</button>
 </div>
 
 <!-- GALLERY -->
@@ -121,14 +133,14 @@ border-radius:16px;
 <img src="photo10.jpg">
 </div>
 </div>
-<button onclick="nextStep()">Next 💌</button>
+<button id="galleryNext">Next 💌</button>
 </div>
 
 <!-- STORY -->
 <div class="step" id="s3">
 <h1>Our Story ☕💌</h1>
 <div class="card" style="text-align:left;" id="storyBox"></div>
-<button onclick="nextStep()">Next 🤍</button>
+<button id="storyNext">Next 🤍</button>
 </div>
 
 <!-- PARAGRAPH -->
@@ -141,15 +153,15 @@ If liking you more every day is a crime — I’m not even trying to be innocent
 
 Don’t worry, I’ll act normal… just don’t stand too close and smile. Then I’m not responsible. 😌☕
 </div>
-<button onclick="nextStep()">One Last Thing 🤍</button>
+<button id="paraNext">One Last Thing 🤍</button>
 </div>
 
 <!-- HUG -->
 <div class="step" id="s5">
-<h1>Can I Have This Hug? 🤗</h1>
+<h1>Before this page ends — can I claim one honest, tight, stay-a-little-longer hug from you? 🤗❤️</h1>
 <div class="card">
-<button onclick="hug()">Come here</button>
-<button onclick="hug()">Tight hug</button>
+<button id="hugBtn1">Come here</button>
+<button id="hugBtn2">Tight hug</button>
 
 <div id="hugGifs" style="display:none;margin-top:15px;">
 <img src="hug1.gif" width="160">
@@ -159,17 +171,33 @@ Don’t worry, I’ll act normal… just don’t stand too close and smile. Then
 <div id="messageBox" style="display:none;margin-top:15px;">
 <textarea id="hisMessage" placeholder="Write anything you want..."></textarea>
 <br><br>
-<button onclick="sendMessage()">Send ☕❤️</button>
+<button id="sendBtn">Send ☕❤️</button>
+<div id="savedMessages"></div>
 </div>
 </div>
 </div>
 
 </div>
 
-<script>
+<script type="module">
 
-/* HEART RAIN */
-function startHeartRain(){
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBqFi6RqcBwlsom6COkOVwpkwywNX84zp0",
+  authDomain: "coffee-love-b2ae3.firebaseapp.com",
+  projectId: "coffee-love-b2ae3",
+  storageBucket: "coffee-love-b2ae3.firebasestorage.app",
+  messagingSenderId: "760304055514",
+  appId: "1:760304055514:web:d764d034c1c4e8f29821e3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* Heart Rain */
 setInterval(()=>{
 let heart=document.createElement("div");
 heart.className="heartRain";
@@ -179,114 +207,59 @@ heart.style.animationDuration=(3+Math.random()*2)+"s";
 document.body.appendChild(heart);
 setTimeout(()=>heart.remove(),5000);
 },400);
-}
-startHeartRain();
 
 /* MUSIC */
 const mainSong=document.getElementById("mainSong");
 const storySong=document.getElementById("storySong");
 const hugSong=document.getElementById("hugSong");
 
-function stopAll(){
-mainSong.pause();
-storySong.pause();
-hugSong.pause();
-}
-
+function stopAll(){mainSong.pause();storySong.pause();hugSong.pause();}
 function playMain(){stopAll();mainSong.play();}
 function playStory(){stopAll();storySong.play();}
 function playHug(){stopAll();hugSong.play();}
 
-/* UNLOCK */
-function unlock(){
-if(document.getElementById("pw").value.toLowerCase()==="i coffee you"){
-document.getElementById("lock").style.display="none";
-document.getElementById("main").style.display="block";
-playMain();
-goToStep(1);
-setupGame();
-}else{
-document.getElementById("err").innerText="Wrong key… but cute try 😌";
-}
-}
-
-let current=1;
-function goToStep(n){
-document.querySelectorAll(".step").forEach(s=>s.style.display="none");
-document.getElementById("s"+n).style.display="block";
-current=n;
-
-if(n===3) playStory();
-}
-
-function nextStep(){
-if(current<5) goToStep(current+1);
-}
-
-/* GAME */
-function setupGame(){
-const texts=["Mine ☕","Not this 😜","Wrong one 😏","Try again 😌","Maybe? 😄","Nope 😆"];
-texts.sort(()=>0.5-Math.random());
-gameArea.innerHTML="";
-texts.forEach(t=>{
-let btn=document.createElement("button");
-btn.innerText=t;
-btn.onclick=()=>{
-if(t.includes("Mine")){
-btn.innerText="You chose us 💘";
-document.getElementById("gameNext").style.display="block";
-}else{
-btn.innerText="Nooo 😅";
-}
-};
-gameArea.appendChild(btn);
-});
-}
-
-/* STORY */
+/* STORY INSERT */
 const fullStoryHTML = `Our story<br><br>
+
 Sab start hua tumhari us novel-type Tinder DP se — yellow wali with goggles — sach bolu to full love-at-first-sight wala scene ho gaya tha mera 😭<br><br>
+
 Phir bio dekha — “coffee consultant” — aur main boli, eyyy jaa beee sab tu hi kar lega kya 😭<br><br>
+
 Phir Insta stalk kiya… coffee, coffee, coffee… aur beech me ekdum kaatilana handsome barista 😭🫶<br>
 Tab to maine decide kar liya — ye londa to chahiye hi chahiye.<br>
 Aapka shy-pose wala photo mujhe sabse zyada pasand hai — jab humne ek dusre right swipe bhi nahi kiya tha tabse wo photos mere account me saved the.<br><br>
+
 Pehli nazar me aisa jaadu kar diya tumne,<br>
 ban baithe ho mera jiya 🙂‍↔️<br><br>
+
 Maine turant swipe right kiya — aur agar aap nahi karte na,<br>
 to sach me 10–12 account bana ke karwa leti 😭🫶<br><br>
+
 Phir mall me escalator pe jab first time real me dekha,<br>
 aur tumhari voice suni — butterflies hi butterflies 😭<br>
 Besttt feeling. No exaggeration.<br><br>
+
 Aur hamara twinning moment 😭<br>
 Main khud ko rok hi nahi payi — pehli meet me hi haath pakad ke chalne lagi jaise bohot pehle se jaanti hu.<br>
 Movie bhi waise hi dekhi — ek baar bhi nahi socha aap mere bare me kya sochoge.<br>
 First impression ka to satyanaash kar liya maine 😂<br><br>
+
 Mujhe pata hai first meet pe itna close hona normal nahi hota —<br>
 shayad ajeeb laga ho… but us moment dil ne bola — aap jaisa insaan phir nahi milega —<br>
 aur maine dil ki sun li.<br>
 Agar first impression thoda crazy gaya ho — I’m really sorry 😭🤍<br><br>
+
+Aur gallery me maine aapke close ones ko bhi add kiya hai —<br>
+kyunki unhi ke bare me mujhe pata hai, baaki logo ke bare me aapne bataya nahi 😌<br>
+To technically — they are your Valentine team now 😄<br><br>
+
 Aur haan — ye pura Valentine surprise site banai hai…<br>
 isliye mere photos bhi daal diye 😂🙂‍↔️<br><br>
+
 I hope you like it ☕💌`;
 
-document.getElementById("storyBox").innerHTML=fullStoryHTML;
-
-/* HUG */
-function hug(){
-playHug();
-document.getElementById("hugGifs").style.display="block";
-setTimeout(()=>{
-document.getElementById("messageBox").style.display="block";
-},1500);
-}
-
-/* DEMO SAVE */
-function sendMessage(){
-alert("Message saved (demo mode) ❤️");
-document.getElementById("hisMessage").value="";
-}
+document.getElementById("storyBox").innerHTML = fullStoryHTML;
 
 </script>
-
 </body>
 </html>
