@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,10 +28,7 @@ z-index:999;
 pointer-events:none;
 }
 @keyframes fall{
-to{
-transform:translateY(110vh);
-opacity:0;
-}
+to{transform:translateY(110vh);opacity:0;}
 }
 
 h1{
@@ -81,15 +78,6 @@ border-radius:16px;
 }
 
 .step{display:none;padding:15px;}
-
-.savedCard{
-background:rgba(255,255,255,0.7);
-padding:10px;
-border-radius:12px;
-margin-top:10px;
-text-align:left;
-}
-
 </style>
 </head>
 
@@ -172,30 +160,15 @@ Don’t worry, I’ll act normal… just don’t stand too close and smile. Then
 <textarea id="hisMessage" placeholder="Write anything you want..."></textarea>
 <br><br>
 <button onclick="sendMessage()">Send ☕❤️</button>
-<div id="savedMessages"></div>
 </div>
 </div>
 </div>
 
 </div>
 
-<script type="module">
+<script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp }
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-/* 🔥 PUT YOUR FIREBASE CONFIG HERE */
-const firebaseConfig = PASTE_YOUR_FIREBASE_KEYS_HERE;
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const mainSong=document.getElementById("mainSong");
-const storySong=document.getElementById("storySong");
-const hugSong=document.getElementById("hugSong");
-
-/* HEART RAIN START */
+/* HEART RAIN */
 function startHeartRain(){
 setInterval(()=>{
 let heart=document.createElement("div");
@@ -209,26 +182,31 @@ setTimeout(()=>heart.remove(),5000);
 }
 startHeartRain();
 
-/* MUSIC CONTROL */
+/* MUSIC */
+const mainSong=document.getElementById("mainSong");
+const storySong=document.getElementById("storySong");
+const hugSong=document.getElementById("hugSong");
+
 function stopAll(){
 mainSong.pause();
 storySong.pause();
 hugSong.pause();
 }
+
 function playMain(){stopAll();mainSong.play();}
 function playStory(){stopAll();storySong.play();}
 function playHug(){stopAll();hugSong.play();}
 
 /* UNLOCK */
-window.unlock=function(){
-if(pw.value.toLowerCase()==="i coffee you"){
-lock.style.display="none";
-main.style.display="block";
+function unlock(){
+if(document.getElementById("pw").value.toLowerCase()==="i coffee you"){
+document.getElementById("lock").style.display="none";
+document.getElementById("main").style.display="block";
 playMain();
 goToStep(1);
 setupGame();
 }else{
-err.innerText="Wrong key… but cute try 😌";
+document.getElementById("err").innerText="Wrong key… but cute try 😌";
 }
 }
 
@@ -240,13 +218,15 @@ current=n;
 
 if(n===3) playStory();
 }
-window.nextStep=function(){ if(current<5) goToStep(current+1); }
+
+function nextStep(){
+if(current<5) goToStep(current+1);
+}
 
 /* GAME */
 function setupGame(){
 const texts=["Mine ☕","Not this 😜","Wrong one 😏","Try again 😌","Maybe? 😄","Nope 😆"];
 texts.sort(()=>0.5-Math.random());
-
 gameArea.innerHTML="";
 texts.forEach(t=>{
 let btn=document.createElement("button");
@@ -285,9 +265,6 @@ Mujhe pata hai first meet pe itna close hona normal nahi hota —<br>
 shayad ajeeb laga ho… but us moment dil ne bola — aap jaisa insaan phir nahi milega —<br>
 aur maine dil ki sun li.<br>
 Agar first impression thoda crazy gaya ho — I’m really sorry 😭🤍<br><br>
-Aur gallery me maine aapke close ones ko bhi add kiya hai —<br>
-kyunki unhi ke bare me mujhe pata hai, baaki logo ke bare me aapne bataya nahi 😌<br>
-To technically — they are your Valentine team now 😄<br><br>
 Aur haan — ye pura Valentine surprise site banai hai…<br>
 isliye mere photos bhi daal diye 😂🙂‍↔️<br><br>
 I hope you like it ☕💌`;
@@ -295,7 +272,7 @@ I hope you like it ☕💌`;
 document.getElementById("storyBox").innerHTML=fullStoryHTML;
 
 /* HUG */
-window.hug=function(){
+function hug(){
 playHug();
 document.getElementById("hugGifs").style.display="block";
 setTimeout(()=>{
@@ -303,34 +280,11 @@ document.getElementById("messageBox").style.display="block";
 },1500);
 }
 
-/* SAVE MESSAGE */
-window.sendMessage=async function(){
-const message=document.getElementById("hisMessage").value.trim();
-if(message==="")return;
-
-await addDoc(collection(db,"loveMessages"),{
-text:message,
-createdAt:serverTimestamp()
-});
-
+/* DEMO SAVE */
+function sendMessage(){
+alert("Message saved (demo mode) ❤️");
 document.getElementById("hisMessage").value="";
-loadMessages();
 }
-
-async function loadMessages(){
-const container=document.getElementById("savedMessages");
-container.innerHTML="";
-const q=query(collection(db,"loveMessages"),orderBy("createdAt","desc"));
-const snapshot=await getDocs(q);
-snapshot.forEach(doc=>{
-const card=document.createElement("div");
-card.className="savedCard";
-card.innerText=doc.data().text;
-container.appendChild(card);
-});
-}
-
-window.addEventListener("DOMContentLoaded",loadMessages);
 
 </script>
 
